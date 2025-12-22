@@ -1,0 +1,326 @@
+-- =====================================================
+-- PODCAST SERVICE DATABASE [Port: 8061]
+-- =====================================================
+
+-- PodcastCategory table
+CREATE TABLE PodcastCategory (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL,
+    mainImageFileKey NVARCHAR(MAX) NULL
+);
+
+-- PodcastSubCategory table
+CREATE TABLE PodcastSubCategory (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL,
+    podcastCategoryId INT NOT NULL,
+    FOREIGN KEY (podcastCategoryId) REFERENCES PodcastCategory(id)
+);
+
+-- PodcastChannelStatus table
+CREATE TABLE PodcastChannelStatus (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastShowStatus table
+CREATE TABLE PodcastShowStatus (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastEpisodeStatus table
+CREATE TABLE PodcastEpisodeStatus (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastEpisodeSubscriptionType table
+CREATE TABLE PodcastEpisodeSubscriptionType (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastShowSubscriptionType table
+CREATE TABLE PodcastShowSubscriptionType (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastBackgroundSoundTrack table
+CREATE TABLE PodcastBackgroundSoundTrack
+(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    name NVARCHAR(50) NOT NULL,
+    description NVARCHAR(MAX) NULL,
+    mainImageFileKey NVARCHAR(MAX) NULL,
+    audioFileKey NVARCHAR(MAX) NULL,
+    createdAt DATETIME NOT NULL DEFAULT GETDATE(),
+    updatedAt DATETIME NOT NULL DEFAULT GETDATE()
+);
+
+-- PodcastIllegalContentType table
+CREATE TABLE PodcastIllegalContentType (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastEpisodeLicenseType table
+CREATE TABLE PodcastEpisodeLicenseType (
+    id INT PRIMARY KEY,
+    name NVARCHAR(100) NOT NULL
+);
+
+-- PodcastEpisodePublishReviewSessionStatus table
+CREATE TABLE PodcastEpisodePublishReviewSessionStatus (
+    id INT PRIMARY KEY,
+    name NVARCHAR(50) NOT NULL
+);
+
+-- PodcastChannel table
+CREATE TABLE PodcastChannel (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    name NVARCHAR(250) NOT NULL,
+    description NVARCHAR(MAX) NOT NULL DEFAULT '',
+    backgroundImageFileKey NVARCHAR(MAX) NULL,
+    mainImageFileKey NVARCHAR(MAX) NULL,
+    totalFavorite INT NOT NULL DEFAULT 0,
+    listenCount INT NOT NULL DEFAULT 0,
+    podcasterId INT NOT NULL,
+    podcastCategoryId INT NULL,
+    podcastSubCategoryId INT NULL,
+    deletedAt DATETIME NULL DEFAULT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    updatedAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastCategoryId) REFERENCES PodcastCategory(id),
+    FOREIGN KEY (podcastSubCategoryId) REFERENCES PodcastSubCategory(id)
+);
+
+-- PodcastShow table
+CREATE TABLE PodcastShow (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    name NVARCHAR(250) NOT NULL,
+    description NVARCHAR(MAX) NOT NULL DEFAULT '',
+    language NVARCHAR(50) NOT NULL,
+    releaseDate DATE NULL,
+    isReleased BIT NULL,
+    copyright NVARCHAR(250) NOT NULL,
+    uploadFrequency NVARCHAR(MAX) NULL,
+    averageRating FLOAT NOT NULL DEFAULT 0,
+    ratingCount INT NOT NULL DEFAULT 0,
+    mainImageFileKey NVARCHAR(MAX) NULL,
+    trailerAudioFileKey NVARCHAR(MAX) NULL,
+    totalFollow INT NOT NULL DEFAULT 0,
+    listenCount INT NOT NULL DEFAULT 0,
+    podcasterId INT NOT NULL,
+    podcastCategoryId INT NULL,
+    podcastSubCategoryId INT NULL,
+    podcastShowSubscriptionTypeId INT NOT NULL DEFAULT 1,
+    podcastChannelId UNIQUEIDENTIFIER NULL,
+    takenDownReason NVARCHAR(MAX) NULL,
+    deletedAt DATETIME NULL DEFAULT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    updatedAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastCategoryId) REFERENCES PodcastCategory(id),
+    FOREIGN KEY (podcastSubCategoryId) REFERENCES PodcastSubCategory(id),
+    FOREIGN KEY (podcastShowSubscriptionTypeId) REFERENCES PodcastShowSubscriptionType(id),
+    FOREIGN KEY (podcastChannelId) REFERENCES PodcastChannel(id)
+);
+
+-- PodcastEpisode table
+CREATE TABLE PodcastEpisode (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    name NVARCHAR(250) NOT NULL,
+    description NVARCHAR(MAX) NOT NULL DEFAULT '',
+    explicitContent BIT NOT NULL DEFAULT 0,
+    releaseDate DATE NULL,
+    isReleased BIT NULL,
+    mainImageFileKey NVARCHAR(MAX) NULL,
+    audioFileKey NVARCHAR(MAX) NULL DEFAULT NULL,
+    audioFileSize FLOAT NULL DEFAULT NULL,
+    audioLength INT NULL DEFAULT NULL,
+    audioFingerPrint VARBINARY(MAX) NULL DEFAULT NULL,
+    audioTranscript NVARCHAR(MAX) NULL DEFAULT NULL,
+    audioEncryptionKeyId UNIQUEIDENTIFIER NULL DEFAULT NULL,
+    audioEncryptionKeyFileKey NVARCHAR(MAX) NULL DEFAULT NULL,
+    podcastEpisodeSubscriptionTypeId INT NOT NULL DEFAULT 1,
+    podcastShowId UNIQUEIDENTIFIER NOT NULL,
+    seasonNumber INT NOT NULL DEFAULT 0,
+    episodeOrder INT NOT NULL DEFAULT 1,
+    totalSave INT NOT NULL DEFAULT 0,
+    listenCount INT NOT NULL DEFAULT 0,
+    isAudioPublishable BIT NULL,
+    takenDownReason NVARCHAR(MAX) NULL,
+    deletedAt DATETIME NULL DEFAULT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    updatedAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastEpisodeSubscriptionTypeId) REFERENCES PodcastEpisodeSubscriptionType(id),
+    FOREIGN KEY (podcastShowId) REFERENCES PodcastShow(id)
+);
+
+-- PodcastEpisodeListenSession table
+CREATE TABLE PodcastEpisodeListenSession (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    accountId INT NOT NULL,
+    podcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    lastListenDurationSeconds INT NOT NULL DEFAULT 0,
+    isCompleted BIT NOT NULL DEFAULT 0,
+    isContentRemoved BIT NOT NULL DEFAULT 0,
+    podcastCategoryId INT NULL,
+    podcastSubCategoryId INT NULL;
+    expiredAt DATETIME NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastEpisodeId) REFERENCES PodcastEpisode(id)
+    FOREIGN KEY (podcastCategoryId) REFERENCES PodcastCategory(id),
+    FOREIGN KEY (podcastSubCategoryId) REFERENCES PodcastSubCategory(id)
+);
+
+-- PodcastEpisodeListenSessionHlsEnckeyRequestToken table
+CREATE TABLE PodcastEpisodeListenSessionHlsEnckeyRequestToken (
+    podcastEpisodeListenSessionId UNIQUEIDENTIFIER NOT NULL,
+    token NVARCHAR(500) NOT NULL, -- Changed from NVARCHAR(MAX) to allow use as primary key
+    isUsed BIT NOT NULL DEFAULT 0,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    -- Composite primary key
+    CONSTRAINT PK_PodcastEpisodeListenSessionHlsEnckeyRequestToken 
+        PRIMARY KEY (podcastEpisodeListenSessionId, token),
+    -- Foreign key to PodcastEpisodeListenSession
+    CONSTRAINT FK_PodcastEpisodeListenSessionHlsEnckeyRequestToken_Session
+        FOREIGN KEY (podcastEpisodeListenSessionId) 
+        REFERENCES PodcastEpisodeListenSession(id)
+        ON DELETE CASCADE -- Automatically delete tokens when session is deleted
+);
+
+-- PodcastEpisodeLicense table
+CREATE TABLE PodcastEpisodeLicense (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    podcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    licenseDocumentFileKey NVARCHAR(MAX) NOT NULL,
+    podcastEpisodeLicenseTypeId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastEpisodeId) REFERENCES PodcastEpisode(id),
+    FOREIGN KEY (podcastEpisodeLicenseTypeId) REFERENCES PodcastEpisodeLicenseType(id)
+);
+
+-- PodcastEpisodeIllegalContentTypeMarking table
+CREATE TABLE PodcastEpisodeIllegalContentTypeMarking (
+    podcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    podcastIllegalContentTypeId INT NOT NULL,
+    markerId INT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    PRIMARY KEY (podcastEpisodeId, podcastIllegalContentTypeId),
+    FOREIGN KEY (podcastEpisodeId) REFERENCES PodcastEpisode(id),
+    FOREIGN KEY (podcastIllegalContentTypeId) REFERENCES PodcastIllegalContentType(id)
+);
+
+CREATE TABLE PodcastEpisodePublishDuplicateDetection (
+    podcastEpisodePublishReviewSessionId INT NOT NULL,
+    duplicatePodcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+	PRIMARY KEY (podcastEpisodePublishReviewSessionId, duplicatePodcastEpisodeId),
+    FOREIGN KEY (podcastEpisodePublishReviewSessionId) REFERENCES PodcastEpisodePublishReviewSession(id),
+    FOREIGN KEY (duplicatePodcastEpisodeId) REFERENCES PodcastEpisode(id),
+);
+
+-- PodcastEpisodePublishReviewSession table
+CREATE TABLE PodcastEpisodePublishReviewSession (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    assignedStaff INT NOT NULL,
+    podcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    note NVARCHAR(MAX) NULL,
+    reReviewCount INT NOT NULL DEFAULT 0,
+    deadline DATETIME NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    updatedAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastEpisodeId) REFERENCES PodcastEpisode(id)
+);
+
+-- PodcastEpisodePublishReviewSessionStatusTracking table
+CREATE TABLE PodcastEpisodePublishReviewSessionStatusTracking (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    podcastEpisodePublishReviewSessionId INT NOT NULL,
+    podcastEpisodePublishReviewSessionStatusId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastEpisodePublishReviewSessionId) REFERENCES PodcastEpisodePublishReviewSession(id),
+    FOREIGN KEY (podcastEpisodePublishReviewSessionStatusId) REFERENCES PodcastEpisodePublishReviewSessionStatus(id)
+);
+
+-- PodcastChannelStatusTracking table
+CREATE TABLE PodcastChannelStatusTracking (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    podcastChannelId UNIQUEIDENTIFIER NOT NULL,
+    podcastChannelStatusId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastChannelId) REFERENCES PodcastChannel(id),
+    FOREIGN KEY (podcastChannelStatusId) REFERENCES PodcastChannelStatus(id)
+);
+
+-- PodcastShowStatusTracking table
+CREATE TABLE PodcastShowStatusTracking (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    podcastShowId UNIQUEIDENTIFIER NOT NULL,
+    podcastShowStatusId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastShowId) REFERENCES PodcastShow(id),
+    FOREIGN KEY (podcastShowStatusId) REFERENCES PodcastShowStatus(id)
+);
+
+-- PodcastEpisodeStatusTracking table
+CREATE TABLE PodcastEpisodeStatusTracking (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    podcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    podcastEpisodeStatusId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastEpisodeId) REFERENCES PodcastEpisode(id),
+    FOREIGN KEY (podcastEpisodeStatusId) REFERENCES PodcastEpisodeStatus(id)
+);
+
+-- PodcastShowReview table
+CREATE TABLE PodcastShowReview (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    title NVARCHAR(250) NULL,
+    content NVARCHAR(MAX) NULL,
+    rating FLOAT NOT NULL,
+    accountId INT NOT NULL,
+    podcastShowId UNIQUEIDENTIFIER NOT NULL,
+    deletedAt DATETIME NULL DEFAULT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    updatedAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    FOREIGN KEY (podcastShowId) REFERENCES PodcastShow(id)
+);
+
+-- Hashtag table
+CREATE TABLE Hashtag (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(250) NOT NULL
+);
+
+-- PodcastChannelHashtag table
+CREATE TABLE PodcastChannelHashtag (
+    podcastChannelId UNIQUEIDENTIFIER NOT NULL,
+    hashtagId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    PRIMARY KEY (podcastChannelId, hashtagId),
+    FOREIGN KEY (podcastChannelId) REFERENCES PodcastChannel(id),
+    FOREIGN KEY (hashtagId) REFERENCES Hashtag(id)
+);
+
+-- PodcastShowHashtag table
+CREATE TABLE PodcastShowHashtag (
+    podcastShowId UNIQUEIDENTIFIER NOT NULL,
+    hashtagId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    PRIMARY KEY (podcastShowId, hashtagId),
+    FOREIGN KEY (podcastShowId) REFERENCES PodcastShow(id),
+    FOREIGN KEY (hashtagId) REFERENCES Hashtag(id)
+);
+
+-- PodcastEpisodeHashtag table
+CREATE TABLE PodcastEpisodeHashtag (
+    podcastEpisodeId UNIQUEIDENTIFIER NOT NULL,
+    hashtagId INT NOT NULL,
+    createdAt DATETIME NOT NULL DEFAULT (CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'N. Central Asia Standard Time' AS DATETIME)),
+    PRIMARY KEY (podcastEpisodeId, hashtagId),
+    FOREIGN KEY (podcastEpisodeId) REFERENCES PodcastEpisode(id),
+    FOREIGN KEY (hashtagId) REFERENCES Hashtag(id)
+);

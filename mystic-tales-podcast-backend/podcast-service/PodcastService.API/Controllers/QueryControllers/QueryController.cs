@@ -1,0 +1,162 @@
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
+using PodcastService.API.Filters.ExceptionFilters;
+using PodcastService.BusinessLogic.DTOs.Account;
+using PodcastService.BusinessLogic.Models.CrossService;
+using PodcastService.BusinessLogic.Services.CrossServiceServices.QueryServices;
+using PodcastService.DataAccess.Entities.SqlServer;
+
+namespace PodcastService.API.Controllers.QueryControllers
+{
+    [Route("api/query")]
+    [ApiController]
+    [TypeFilter(typeof(HttpExceptionFilter))]
+    public class QueryController : ControllerBase
+    {
+        private readonly GenericQueryService _genericQueryService;
+        private readonly HttpServiceQueryClient _httpServiceQueryClient;
+
+        public QueryController(GenericQueryService genericQueryService, HttpServiceQueryClient httpServiceQueryClient)
+        {
+            _genericQueryService = genericQueryService;
+            _httpServiceQueryClient = httpServiceQueryClient;
+        }
+
+        [HttpPost("batch")]
+        public async Task<IActionResult> ExecuteBatch([FromBody] BatchQueryRequest request)
+        {
+            var results = new JObject();
+            var errors = new List<string>();
+
+            foreach (var query in request.Queries)
+            {
+                try
+                {
+                    var result = await _genericQueryService.HandleQueryAsync(query);
+                    results[query.Key] = result;
+                }
+                catch (Exception ex)
+                {
+                    results[query.Key] = JObject.FromObject(new { error = ex.Message });
+                    errors.Add($"Query {query.Key}: {ex.Message}");
+                }
+            }
+
+            return Ok(new BatchQueryResult { Results = results, Errors = errors });
+        }
+
+
+        /// <summary>
+        /// Gọi lại chính API /api/query/batch thông qua HttpServiceQueryClient (self-call)
+        /// </summary>
+        [HttpPost("self-batch")]
+        public async Task<IActionResult> SelfBatch([FromBody] string serviceName)
+        {
+            // "TransactionService" là tên service bạn đã cấu hình trong appsettings cho chính API này
+            var batchRequest = new BatchQueryRequest
+            {
+                Queries = new List<BatchQueryItem>
+                    {
+                        new BatchQueryItem
+                        {
+                            Key = "accounts",
+                            EntityType = "Account",
+                            QueryType = "FindAll",
+                            Parameters = new JObject
+                            {
+                                { "RoleId", 4 },
+                                { "include", "Role" }
+                            },
+                            Fields = new string[] { "Id", "Email", "RoleId", "Role" }
+                        }
+                    }
+            };
+            var result = await _httpServiceQueryClient.ExecuteBatchAsync(serviceName, batchRequest);
+            return Ok(new
+            {
+                accounts = result.Results["accounts"][0]["Role"],
+            });
+        }
+
+        [HttpGet("test-query")]
+        public async Task<IActionResult> TestQuery([FromQuery] int accountId)
+        {
+            // var batchRequest = new BatchQueryRequest
+            // {
+            //     Queries = new List<BatchQueryItem>
+            //         {
+            //             new BatchQueryItem
+            //             {
+            //                 Key = "podcastShow",
+            //                 QueryType = "findall",
+            //                 EntityType = "PodcastShow",
+            //                 Parameters = JObject.FromObject(new
+            //                 {
+            //                     where = new
+            //                     {
+            //                         PodcastChannelId = "21a6d285-fc9d-48ec-bdf4-7edfe90aabc1"
+            //                     },
+            //                     include = "PodcastShowStatusTrackings"
+            //                 })
+            //             }
+            //         }
+            // };
+            // var result = await _httpServiceQueryClient.ExecuteBatchAsync("PodcastService", batchRequest);
+
+            // var realResult = result.Results?["podcastShow"].ToObject<List<PodcastShow>>();
+            // return Ok(new
+            // {
+            //     result = realResult
+            // });
+
+            var batchRequest1 = new BatchQueryRequest
+            {
+                Queries = new List<BatchQueryItem>
+                    {
+                        new BatchQueryItem
+                        {
+                            Key = "podcastShow",
+                            QueryType = "findall",
+                            EntityType = "PodcastShow",
+                            Parameters = JObject.FromObject(new
+                            {
+                                where = new
+                                {
+                                    PodcastChannelId = "21a6d285-fc9d-48ec-bdf4-7edfe90aabc1"
+                                },
+                                include = "PodcastShowStatusTrackings"
+                            })
+                        }
+                    }
+            };
+            // var batchRequest = new BatchQueryRequest
+            // {
+            //     Queries = new List<BatchQueryItem>
+            //         {
+            //             new BatchQueryItem
+            //             {
+            //                 Key = "podcastShow",
+            //                 QueryType = "findall",
+            //                 EntityType = "PodcastShow",
+            //                 Parameters = JObject.FromObject(new
+            //                 {
+            //                     where = new
+            //                     {
+            //                         PodcastChannelId = "21a6d285-fc9d-48ec-bdf4-7edfe90aabc1"
+            //                     },
+            //                     include = "PodcastShowStatusTrackings"
+            //                 })
+            //             }
+            //         }
+            // };
+            var result1 = await _httpServiceQueryClient.ExecuteBatchAsync("PodcastService", batchRequest1);
+
+            var realResult1 = result1.Results?["podcastShow"];
+            var abc1 = realResult1 != null ? realResult1.ToObject<List<PodcastShow>>() : null;
+            return Ok(new
+            {
+                result = realResult1
+            });
+        }
+    }
+}

@@ -1,0 +1,65 @@
+﻿using Google;
+using PodcastService.DataAccess.Data;
+using PodcastService.DataAccess.Repositories.interfaces;
+
+namespace PodcastService.DataAccess.UOW;
+
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly AppDbContext _appDbContext;
+    // public IAccountRepository AccountRepository { get; }
+    public IPodcastChannelHashtagRepository PodcastChannelHashtagRepository { get; }
+    public IPodcastShowHashtagRepository PodcastShowHashtagRepository { get; }
+    public IPodcastEpisodeHashtagRepository PodcastEpisodeHashtagRepository { get; }
+    public IPodcastEpisodeIllegalContentTypeMarkingRepository PodcastEpisodeIllegalContentTypeMarkingRepository { get; }
+    public IPodcastEpisodePublishDuplicateDetectionRepository PodcastEpisodePublishDuplicateDetectionRepository { get; }
+    public IPodcastEpisodeListenSessionRepository PodcastEpisodeListenSessionRepository { get; }
+    public IPodcastShowReviewRepository PodcastShowReviewRepository { get; }
+    public IPodcastEpisodeListenSessionHlsEnckeyRequestTokenRepository PodcastEpisodeListenSessionHlsEnckeyRequestTokenRepository { get; }
+
+    public UnitOfWork(
+        AppDbContext appDbContext,
+        // IAccountRepository accountRepository,
+        IPodcastChannelHashtagRepository podcastChannelHashtagRepository,
+        IPodcastShowHashtagRepository podcastShowHashtagRepository,
+        IPodcastEpisodeHashtagRepository podcastEpisodeHashtagRepository,
+        IPodcastEpisodeIllegalContentTypeMarkingRepository podcastEpisodeIllegalContentTypeMarkingRepository,
+        IPodcastEpisodePublishDuplicateDetectionRepository podcastEpisodePublishDuplicateDetectionRepository,
+        IPodcastEpisodeListenSessionRepository podcastEpisodeListenSessionRepository,
+        IPodcastShowReviewRepository podcastShowReviewRepository,
+        IPodcastEpisodeListenSessionHlsEnckeyRequestTokenRepository podcastEpisodeListenSessionHlsEnckeyRequestTokenRepository
+    )
+    {
+        _appDbContext = appDbContext;
+        PodcastChannelHashtagRepository = podcastChannelHashtagRepository;
+        PodcastShowHashtagRepository = podcastShowHashtagRepository;
+        PodcastEpisodeHashtagRepository = podcastEpisodeHashtagRepository;
+        PodcastEpisodeIllegalContentTypeMarkingRepository = podcastEpisodeIllegalContentTypeMarkingRepository;
+        PodcastEpisodePublishDuplicateDetectionRepository = podcastEpisodePublishDuplicateDetectionRepository;
+        PodcastEpisodeListenSessionRepository = podcastEpisodeListenSessionRepository;
+        PodcastShowReviewRepository = podcastShowReviewRepository;
+        PodcastEpisodeListenSessionHlsEnckeyRequestTokenRepository = podcastEpisodeListenSessionHlsEnckeyRequestTokenRepository;
+
+        // this.AccountRepository = accountRepository;
+        // this.AccountOnlineTrackingRepository = accountOnlineTrackingRepository;
+        // this.SurveyRepository = surveyRepository;
+        // this.SurveyQuestionRepository = surveyQuestionRepository;
+        // this.SurveyTopicFavoriteRepository = surveyTopicFavoriteRepository;
+        // this.PasswordResetTokenRepository = passwordResetTokenRepository;
+        // this.SurveyTakenResultRepository = surveyTakenResultRepository;
+        // this.SurveyStatusTrackingRepository = surveyStatusTrackingRepository;
+        // this.FilterTagRepository = filterTagRepository;
+        // this.TakerTagFilterRepository = takerTagFilterRepository;
+        // this.SystemConfigProfileRepository = systemConfigProfileRepository;
+        // this.SurveyTakerSegmentRepository = surveyTakerSegmentRepository;
+        // this.SurveyTagFilterRepository = surveyTagFilterRepository;
+        // this.AccountProfileRepository = accountProfileRepository;
+        // this.AccountBalanceTransactionRepository = accountBalanceTransactionRepository;
+        // this.SurveyCommunityTransactionRepository = surveyCommunityTransactionRepository;
+    }
+
+    public int Complete()
+    {
+        return _appDbContext.SaveChanges();
+    }
+}
