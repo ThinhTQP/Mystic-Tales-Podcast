@@ -217,10 +217,16 @@ console.log("res", res);
                             return;
                         }
 
-                        dispatch(setAuthToken({ token }));
-                        await new Promise((r) => setTimeout(r, 100));
+                                      dispatch(setAuthToken({ token }));
+                   const tempInstance = axios.create({
+    ...loginRequiredAxiosInstance.defaults,
+    headers: {
+        ...loginRequiredAxiosInstance.defaults.headers,
+        Authorization: `Bearer ${token}`
+    }
+});
 
-                        const res = await getAccountProfile(loginRequiredAxiosInstance);
+                        const res = await getAccountProfile(tempInstance);
 
                         if (!res?.success) {
                             toast.error("Login failed.");
